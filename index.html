@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#f7f4ec" />
+<title>Odo — Mileage Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --font-ui: 'Inter Tight', system-ui, sans-serif;
+    --font-display: 'Fraunces', 'Inter Tight', serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+    --bg: oklch(0.98 0.005 70);
+    --surface: oklch(0.995 0.003 70);
+    --surface-2: oklch(0.955 0.006 70);
+    --ink: oklch(0.18 0.012 60);
+    --ink-dim: oklch(0.45 0.012 60);
+    --ink-mute: oklch(0.62 0.01 60);
+    --line: oklch(0.9 0.008 70);
+
+    --accent: oklch(0.62 0.18 35);
+    --accent-ink: oklch(0.99 0.005 70);
+    --pos: oklch(0.58 0.13 145);
+    --neg: oklch(0.58 0.18 25);
+  }
+  [data-theme="dark"] {
+    --bg: oklch(0.16 0.008 60);
+    --surface: oklch(0.21 0.008 60);
+    --surface-2: oklch(0.24 0.008 60);
+    --ink: oklch(0.97 0.005 70);
+    --ink-dim: oklch(0.72 0.008 60);
+    --ink-mute: oklch(0.55 0.008 60);
+    --line: oklch(0.31 0.008 60);
+    --accent-ink: oklch(0.16 0.008 60);
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: var(--font-ui);
+    background: var(--bg);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  button { font-family: inherit; }
+  input, select, textarea { font-family: inherit; }
+  select { appearance: none; -webkit-appearance: none; background-image: none; }
+
+  /* App shell */
+  .app-shell {
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    background: var(--surface-2);
+  }
+  .app-bar {
+    position: sticky; top: 0; z-index: 50;
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px;
+    background: color-mix(in oklch, var(--bg) 92%, transparent);
+    backdrop-filter: blur(14px) saturate(160%);
+    -webkit-backdrop-filter: blur(14px) saturate(160%);
+    border-bottom: 1px solid var(--line);
+  }
+  .brand {
+    display: flex; align-items: center; gap: 8px;
+    font-family: var(--font-display); font-size: 18px; font-weight: 600;
+    color: var(--ink); letter-spacing: -0.02em;
+  }
+  .brand-mark {
+    width: 24px; height: 24px; border-radius: 6px;
+    background: var(--ink); color: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+  }
+  .seg {
+    display: inline-flex; border: 1px solid var(--line); border-radius: 6px;
+    overflow: hidden; background: var(--surface);
+  }
+  .seg button {
+    padding: 6px 12px;
+    background: transparent; color: var(--ink-dim);
+    border: none; cursor: pointer;
+    font-family: var(--font-mono); font-size: 11px; font-weight: 500;
+    letter-spacing: 0.04em;
+  }
+  .seg button.on { background: var(--ink); color: var(--bg); }
+  .spacer { flex: 1; }
+  .ctrl {
+    padding: 6px 10px; border-radius: 6px;
+    background: var(--surface); border: 1px solid var(--line);
+    color: var(--ink-dim); cursor: pointer;
+    font-family: var(--font-ui); font-size: 12px;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .ctrl:hover { color: var(--ink); }
+
+  /* Stage hosts the mobile or web view */
+  .stage { flex: 1; display: flex; align-items: stretch; justify-content: center; }
+  .stage.mobile {
+    padding: 24px 12px 24px;
+    background: var(--surface-2);
+  }
+  .stage.web {
+    padding: 0;
+    background: var(--bg);
+  }
+
+  /* Phone frame (no iOS chrome — just a clean rounded frame for desktop) */
+  .phone {
+    width: 402px; height: 874px;
+    background: var(--bg);
+    border-radius: 38px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.18), 0 6px 18px rgba(0,0,0,0.06);
+    border: 1px solid var(--line);
+  }
+  /* On real mobile devices: full-bleed, no frame */
+  @media (max-width: 700px) {
+    .stage.mobile { padding: 0; background: var(--bg); }
+    .phone {
+      width: 100vw; height: calc(100vh - 56px);
+      border-radius: 0; border: none; box-shadow: none;
+    }
+  }
+
+  /* Web dashboard host — fills available space */
+  .web-host {
+    width: 100%;
+    max-width: 1280px;
+    height: calc(100vh - 56px);
+    background: var(--bg);
+    border-left: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+  }
+  @media (max-width: 1100px) {
+    .web-host { max-width: 100%; border: none; }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="data.jsx"></script>
+<script type="text/babel" src="primitives.jsx"></script>
+<script type="text/babel" src="screens-mobile-1.jsx"></script>
+<script type="text/babel" src="screens-mobile-2.jsx"></script>
+<script type="text/babel" src="screens-mobile-3.jsx"></script>
+<script type="text/babel" src="screens-mobile-4.jsx"></script>
+<script type="text/babel" src="screens-web.jsx"></script>
+<script type="text/babel" src="mobile-app.jsx"></script>
+
+<script type="text/babel">
+const STORAGE_KEY = 'odo.tweaks.v1';
+const DEFAULTS = {
+  unit: 'mi',
+  dark: false,
+  density: 'comfortable',
+  homeLayout: 'hero',
+  cardStyle: 'editorial',
+  accent: 'terracotta',
+};
+const ACCENTS = {
+  terracotta: { c: 'oklch(0.62 0.18 35)', ink: 'oklch(0.99 0.005 70)' },
+  ocean:      { c: 'oklch(0.55 0.16 230)', ink: 'oklch(0.99 0.005 230)' },
+  forest:     { c: 'oklch(0.50 0.15 150)', ink: 'oklch(0.99 0.005 150)' },
+  ink:        { c: 'oklch(0.25 0.02 60)',  ink: 'oklch(0.99 0.005 70)' },
+  saffron:    { c: 'oklch(0.78 0.16 75)',  ink: 'oklch(0.16 0.02 75)' },
+};
+
+function loadTweaks() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return { ...DEFAULTS };
+    return { ...DEFAULTS, ...JSON.parse(raw) };
+  } catch { return { ...DEFAULTS }; }
+}
+function saveTweaks(t) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(t)); } catch {}
+}
+
+function pickInitialView() {
+  return window.matchMedia('(max-width: 900px)').matches ? 'mobile' : 'web';
+}
+
+function App() {
+  const [tweaks, setTweaks] = React.useState(loadTweaks);
+  const [view, setView] = React.useState(pickInitialView);
+
+  const setTweak = React.useCallback((k, v) => {
+    setTweaks(t => {
+      const next = { ...t, [k]: v };
+      saveTweaks(next);
+      return next;
+    });
+  }, []);
+
+  React.useEffect(() => {
+    document.documentElement.setAttribute('data-theme', tweaks.dark ? 'dark' : 'light');
+    const a = ACCENTS[tweaks.accent] || ACCENTS.terracotta;
+    document.documentElement.style.setProperty('--accent', a.c);
+    document.documentElement.style.setProperty('--accent-ink', a.ink);
+  }, [tweaks.dark, tweaks.accent]);
+
+  return (
+    <div className="app-shell">
+      <header className="app-bar">
+        <div className="brand">
+          <div className="brand-mark">O</div>
+          Odo
+        </div>
+        <div className="seg" role="tablist" aria-label="View">
+          <button className={view === 'mobile' ? 'on' : ''} onClick={() => setView('mobile')}>MOBILE</button>
+          <button className={view === 'web' ? 'on' : ''} onClick={() => setView('web')}>WEB</button>
+        </div>
+        <div className="spacer" />
+        <div className="seg" role="group" aria-label="Distance unit">
+          <button className={tweaks.unit === 'mi' ? 'on' : ''} onClick={() => setTweak('unit', 'mi')}>MI</button>
+          <button className={tweaks.unit === 'km' ? 'on' : ''} onClick={() => setTweak('unit', 'km')}>KM</button>
+        </div>
+        <button className="ctrl" onClick={() => setTweak('dark', !tweaks.dark)} aria-label="Toggle theme">
+          {tweaks.dark ? '☾ Dark' : '☀ Light'}
+        </button>
+      </header>
+
+      <div className={'stage ' + view}>
+        {view === 'mobile' ? (
+          <div className="phone">
+            <MobileApp tweaks={tweaks} setTweak={setTweak} />
+          </div>
+        ) : (
+          <div className="web-host">
+            <WebDashboard unit={tweaks.unit} density={tweaks.density} />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
